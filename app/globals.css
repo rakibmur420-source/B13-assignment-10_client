@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gold: #F5A623;
+  --navy: #0D1B2A;
+  --navy-light: #1B2B3B;
+  --cream: #FDF6E3;
+  --burgundy: #800020;
+  --brown: #4A2C2A;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Georgia', serif;
+}
