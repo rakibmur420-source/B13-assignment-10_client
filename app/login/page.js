@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FiMail, FiLock, FiBook } from "react-icons/fi";
+import { FiMail, FiLock, FiBook, FiShield } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -12,22 +12,33 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login, googleLogin } = useAuth();
   const router = useRouter();
+
+  const roles = [
+    { value: "user", label: "Reader", emoji: "📖", desc: "Browse & buy ebooks" },
+    { value: "writer", label: "Writer", emoji: "✍️", desc: "Manage your ebooks" },
+    { value: "admin", label: "Admin", emoji: "🛡️", desc: "Platform control" },
+  ];
+
+  const redirectByRole = (role) => {
+    if (role === "admin") router.push("/dashboard/admin");
+    else if (role === "writer") router.push("/dashboard/writer");
+    else router.push("/dashboard/user");
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const user = await login(email, password);
-      toast.success("Welcome back!");
-      if (user.role === "admin") router.push("/dashboard/admin");
-      else if (user.role === "writer") router.push("/dashboard/writer");
-      else router.push("/dashboard/user");
+      toast.success(`Welcome back, ${user.name}!`);
+      redirectByRole(user.role);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
+      toast.error(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -36,20 +47,18 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const user = await googleLogin("user");
-      toast.success("Welcome!");
-      if (user.role === "admin") router.push("/dashboard/admin");
-      else if (user.role === "writer") router.push("/dashboard/writer");
-      else router.push("/dashboard/user");
+      const user = await googleLogin(selectedRole);
+      toast.success(`Welcome, ${user.name}!`);
+      redirectByRole(user.role);
     } catch (err) {
-      toast.error("Google login failed");
+      toast.error("Google login failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-navy flex items-center justify-center px-4 pt-20">
+    <main className="min-h-screen bg-navy flex items-center justify-center px-4 pt-20 pb-10">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,25 +75,66 @@ export default function LoginPage() {
           <p className="text-gray-400 mt-2">Sign in to your account</p>
         </div>
 
-        {/* Card */}
         <div className="bg-navy-light border border-gold/20 rounded-2xl p-8">
-          {/* Google Login */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 py-3 border border-gold/20 hover:border-gold/40 rounded-xl text-gray-300 hover:text-white transition-all duration-200 mb-6 disabled:opacity-50"
-          >
-            <FcGoogle size={22} />
-            {googleLoading ? "Signing in..." : "Continue with Google"}
-          </button>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 h-px bg-gold/20" />
-            <span className="text-gray-500 text-sm">or</span>
-            <div className="flex-1 h-px bg-gold/20" />
+          {/* Role Selector */}
+          <div className="mb-6">
+            <label className="text-gray-400 text-sm mb-3 block font-medium">
+              I am signing in as
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {roles.map((role) => (
+                <button
+                  key={role.value}
+                  type="button"
+                  onClick={() => setSelectedRole(role.value)}
+                  className={`py-3 px-2 rounded-xl border text-xs font-medium transition-all duration-200 flex flex-col items-center gap-1 ${
+                    selectedRole === role.value
+                      ? "bg-gold border-gold text-navy font-bold"
+                      : "border-gold/20 text-gray-400 hover:border-gold/40 hover:text-gray-300"
+                  }`}
+                >
+                  <span className="text-lg">{role.emoji}</span>
+                  <span>{role.label}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-gray-500 text-xs mt-2 text-center">
+              {roles.find((r) => r.value === selectedRole)?.desc}
+            </p>
           </div>
 
-          {/* Form */}
+          {/* Admin notice — no Google login for admin */}
+          {selectedRole === "admin" ? (
+            <div className="flex items-start gap-2 mb-6 p-3 bg-gold/10 border border-gold/20 rounded-xl">
+              <FiShield className="text-gold text-base mt-0.5 flex-shrink-0" />
+              <p className="text-gold text-xs leading-relaxed">
+                Admin login uses email &amp; password only. Use credentials created via <code className="bg-navy px-1 rounded">createAdmin.js</code>.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Google Login */}
+              <button
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center gap-3 py-3 border border-gold/20 hover:border-gold/40 rounded-xl text-gray-300 hover:text-white transition-all duration-200 mb-6 disabled:opacity-50"
+              >
+                <FcGoogle size={22} />
+                {googleLoading
+                  ? "Signing in..."
+                  : `Continue with Google as ${selectedRole === "writer" ? "Writer" : "Reader"}`}
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1 h-px bg-gold/20" />
+                <span className="text-gray-500 text-sm">or</span>
+                <div className="flex-1 h-px bg-gold/20" />
+              </div>
+            </>
+          )}
+
+          {/* Email/Password Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="text-gray-400 text-sm mb-2 block">Email</label>
@@ -121,13 +171,15 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading
+                ? "Signing in..."
+                : `Sign In as ${roles.find((r) => r.value === selectedRole)?.label}`}
             </button>
           </form>
 
           <p className="text-center text-gray-400 text-sm mt-6">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-gold hover:underline">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-gold hover:underline font-medium">
               Register here
             </Link>
           </p>
