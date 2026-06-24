@@ -19,14 +19,20 @@ export const AuthProvider = ({ children }) => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+  try {
     const savedUser = localStorage.getItem("fable_user");
     const savedToken = localStorage.getItem("fable_token");
     if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
       setToken(savedToken);
     }
+  } catch (err) {
+    localStorage.removeItem("fable_user");
+    localStorage.removeItem("fable_token");
+  } finally {
     setLoading(false);
-  }, []);
+  }
+}, []);
 
   const register = async (name, email, password, role) => {
     const res = await axios.post(`${API_URL}/api/auth/register`, {

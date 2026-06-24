@@ -10,7 +10,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 
 export default function WriterDashboard() {
-  const { user, token } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
   const [ebooks, setEbooks] = useState([]);
   const [sales, setSales] = useState([]);
@@ -26,15 +26,15 @@ export default function WriterDashboard() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const IMGBB_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
-
   const genres = ["Fiction", "Mystery", "Romance", "Sci-Fi", "Fantasy", "Horror", "Biography", "Self-Help", "History", "Other"];
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     if (user.role === "user") { router.push("/dashboard/user"); return; }
     if (user.role === "admin") { router.push("/dashboard/admin"); return; }
     fetchData();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchData = async () => {
     try {
@@ -139,17 +139,23 @@ export default function WriterDashboard() {
   };
 
   const totalRevenue = sales.reduce((a, b) => a + b.amount, 0);
-
   const tabs = [
     { id: "books", label: "My Ebooks", icon: <FiBook /> },
     { id: "sales", label: "Sales History", icon: <FiDollarSign /> },
     { id: "bookmarks", label: "Bookmarks", icon: <FiBookmark /> },
   ];
 
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-navy pt-24 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,7 +175,6 @@ export default function WriterDashboard() {
           </button>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total Ebooks", value: ebooks.length, icon: <FiBook />, color: "text-gold" },
@@ -185,7 +190,6 @@ export default function WriterDashboard() {
           ))}
         </div>
 
-        {/* Add/Edit Form */}
         {showAddForm && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -207,7 +211,6 @@ export default function WriterDashboard() {
                   className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none"
                 />
               </div>
-
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Genre</label>
                 <select
@@ -220,7 +223,6 @@ export default function WriterDashboard() {
                   {genres.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
-
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Price ($)</label>
                 <input
@@ -234,7 +236,6 @@ export default function WriterDashboard() {
                   className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none"
                 />
               </div>
-
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Cover Image</label>
                 <input
@@ -244,9 +245,8 @@ export default function WriterDashboard() {
                   className="w-full px-4 py-3 bg-navy border border-gold/20 rounded-xl text-gray-300 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gold file:text-navy file:font-bold"
                 />
                 {uploading && <p className="text-gold text-xs mt-1">Uploading...</p>}
-                {formData.coverImage && <p className="text-green-400 text-xs mt-1">✓ Image ready</p>}
+                {formData.coverImage && <p className="text-green-400 text-xs mt-1">Image ready</p>}
               </div>
-
               <div className="md:col-span-2">
                 <label className="text-gray-400 text-sm mb-2 block">Description (Preview)</label>
                 <textarea
@@ -258,7 +258,6 @@ export default function WriterDashboard() {
                   className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none"
                 />
               </div>
-
               <div className="md:col-span-2">
                 <label className="text-gray-400 text-sm mb-2 block">Full Content</label>
                 <textarea
@@ -270,12 +269,8 @@ export default function WriterDashboard() {
                   className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none"
                 />
               </div>
-
               <div className="md:col-span-2 flex gap-4">
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200"
-                >
+                <button type="submit" className="px-6 py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200">
                   {editingEbook ? "Update Ebook" : "Publish Ebook"}
                 </button>
                 <button
@@ -290,7 +285,6 @@ export default function WriterDashboard() {
           </motion.div>
         )}
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {tabs.map((tab) => (
             <button
@@ -311,7 +305,6 @@ export default function WriterDashboard() {
           <div className="h-48 bg-navy-light rounded-xl animate-pulse" />
         ) : (
           <>
-            {/* My Ebooks */}
             {activeTab === "books" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <table className="w-full">
@@ -329,7 +322,7 @@ export default function WriterDashboard() {
                     {ebooks.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="text-center text-gray-400 py-10">
-                          No ebooks yet. Click "Add Ebook" to get started!
+                          No ebooks yet. Click Add Ebook to get started!
                         </td>
                       </tr>
                     ) : (
@@ -353,23 +346,13 @@ export default function WriterDashboard() {
                           <td className="px-6 py-4 text-gray-400 text-sm">{ebook.totalSales}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleToggleStatus(ebook._id)}
-                                className="p-2 text-gray-400 hover:text-gold transition-colors"
-                                title={ebook.status === "published" ? "Unpublish" : "Publish"}
-                              >
+                              <button onClick={() => handleToggleStatus(ebook._id)} className="p-2 text-gray-400 hover:text-gold transition-colors">
                                 {ebook.status === "published" ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                               </button>
-                              <button
-                                onClick={() => handleEdit(ebook)}
-                                className="p-2 text-gray-400 hover:text-gold transition-colors"
-                              >
+                              <button onClick={() => handleEdit(ebook)} className="p-2 text-gray-400 hover:text-gold transition-colors">
                                 <FiEdit size={16} />
                               </button>
-                              <button
-                                onClick={() => handleDelete(ebook._id)}
-                                className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                              >
+                              <button onClick={() => handleDelete(ebook._id)} className="p-2 text-gray-400 hover:text-red-400 transition-colors">
                                 <FiTrash2 size={16} />
                               </button>
                             </div>
@@ -382,7 +365,6 @@ export default function WriterDashboard() {
               </div>
             )}
 
-            {/* Sales History */}
             {activeTab === "sales" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <table className="w-full">
@@ -396,9 +378,7 @@ export default function WriterDashboard() {
                   </thead>
                   <tbody>
                     {sales.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="text-center text-gray-400 py-10">No sales yet.</td>
-                      </tr>
+                      <tr><td colSpan={4} className="text-center text-gray-400 py-10">No sales yet.</td></tr>
                     ) : (
                       sales.map((sale) => (
                         <tr key={sale._id} className="border-b border-gold/10 hover:bg-navy/50 transition-colors">
@@ -414,16 +394,13 @@ export default function WriterDashboard() {
               </div>
             )}
 
-            {/* Bookmarks */}
             {activeTab === "bookmarks" && (
               <div>
                 {bookmarks.length === 0 ? (
                   <div className="text-center py-16">
                     <FiBookmark className="text-gold text-5xl mx-auto mb-4" />
                     <p className="text-gray-400">No bookmarks yet.</p>
-                    <Link href="/ebooks" className="inline-block mt-4 px-6 py-3 bg-gold text-navy font-bold rounded-xl">
-                      Browse Ebooks
-                    </Link>
+                    <Link href="/ebooks" className="inline-block mt-4 px-6 py-3 bg-gold text-navy font-bold rounded-xl">Browse Ebooks</Link>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

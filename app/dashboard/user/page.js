@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export default function UserDashboard() {
-  const { user, token } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
   const [purchases, setPurchases] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
@@ -20,14 +20,15 @@ export default function UserDashboard() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push("/login");
       return;
     }
-    if (user.role === "writer") router.push("/dashboard/writer");
-    if (user.role === "admin") router.push("/dashboard/admin");
+    if (user.role === "writer") { router.push("/dashboard/writer"); return; }
+    if (user.role === "admin") { router.push("/dashboard/admin"); return; }
     fetchData();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchData = async () => {
     try {
@@ -55,10 +56,17 @@ export default function UserDashboard() {
     { id: "profile", label: "Profile", icon: <FiUser /> },
   ];
 
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-navy pt-24 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,7 +79,6 @@ export default function UserDashboard() {
           <p className="text-gray-400 mt-1">Welcome back, {user?.name}!</p>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           {[
             { label: "Purchased", value: purchases.length, icon: <FiBook />, color: "text-gold" },
@@ -86,7 +93,6 @@ export default function UserDashboard() {
           ))}
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
@@ -111,7 +117,6 @@ export default function UserDashboard() {
           </div>
         ) : (
           <>
-            {/* Purchased Ebooks */}
             {activeTab === "purchased" && (
               <div>
                 {purchases.length === 0 ? (
@@ -125,17 +130,10 @@ export default function UserDashboard() {
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {purchases.map((purchase) => (
-                      <motion.div
-                        key={purchase._id}
-                        whileHover={{ scale: 1.03 }}
-                      >
+                      <motion.div key={purchase._id} whileHover={{ scale: 1.03 }}>
                         <Link href={`/ebooks/${purchase.ebook?._id}`}>
                           <div className="bg-navy-light border border-gold/10 hover:border-gold/30 rounded-xl overflow-hidden transition-all duration-200">
-                            <img
-                              src={purchase.ebook?.coverImage}
-                              alt={purchase.ebookTitle}
-                              className="w-full h-48 object-cover"
-                            />
+                            <img src={purchase.ebook?.coverImage} alt={purchase.ebookTitle} className="w-full h-48 object-cover" />
                             <div className="p-3">
                               <h3 className="text-white text-sm font-semibold truncate">{purchase.ebookTitle}</h3>
                               <p className="text-gold text-xs mt-1">${purchase.amount}</p>
@@ -149,7 +147,6 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Purchase History */}
             {activeTab === "history" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <table className="w-full">
@@ -175,9 +172,7 @@ export default function UserDashboard() {
                           <td className="px-6 py-4 text-gold font-bold">${purchase.amount}</td>
                           <td className="px-6 py-4 text-gray-400 text-sm">{new Date(purchase.createdAt).toLocaleDateString()}</td>
                           <td className="px-6 py-4">
-                            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg">
-                              {purchase.status}
-                            </span>
+                            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg">{purchase.status}</span>
                           </td>
                         </tr>
                       ))
@@ -187,7 +182,6 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Bookmarks */}
             {activeTab === "bookmarks" && (
               <div>
                 {bookmarks.length === 0 ? (
@@ -204,11 +198,7 @@ export default function UserDashboard() {
                       <motion.div key={ebook._id} whileHover={{ scale: 1.03 }}>
                         <Link href={`/ebooks/${ebook._id}`}>
                           <div className="bg-navy-light border border-gold/10 hover:border-gold/30 rounded-xl overflow-hidden transition-all duration-200">
-                            <img
-                              src={ebook.coverImage}
-                              alt={ebook.title}
-                              className="w-full h-48 object-cover"
-                            />
+                            <img src={ebook.coverImage} alt={ebook.title} className="w-full h-48 object-cover" />
                             <div className="p-3">
                               <h3 className="text-white text-sm font-semibold truncate">{ebook.title}</h3>
                               <p className="text-gold text-xs mt-1">${ebook.price}</p>
@@ -222,7 +212,6 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Profile */}
             {activeTab === "profile" && (
               <div className="max-w-md">
                 <div className="bg-navy-light border border-gold/20 rounded-2xl p-8">

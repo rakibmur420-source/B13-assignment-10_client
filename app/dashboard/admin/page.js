@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
-  const { user, token } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [ebooks, setEbooks] = useState([]);
@@ -24,26 +24,19 @@ export default function AdminDashboard() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     if (user.role !== "admin") { router.push("/"); return; }
     fetchData();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchData = async () => {
     try {
       const [usersRes, ebooksRes, transactionsRes, analyticsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_URL}/api/ebooks/admin/all`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_URL}/api/transactions/all`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_URL}/api/transactions/analytics`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        axios.get(`${API_URL}/api/users`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/ebooks/admin/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/transactions/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/transactions/analytics`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setUsers(usersRes.data);
       setEbooks(ebooksRes.data);
@@ -58,9 +51,7 @@ export default function AdminDashboard() {
 
   const handleRoleChange = async (userId, role) => {
     try {
-      await axios.patch(`${API_URL}/api/users/${userId}/role`, { role }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.patch(`${API_URL}/api/users/${userId}/role`, { role }, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("Role updated!");
       fetchData();
     } catch (err) {
@@ -70,9 +61,7 @@ export default function AdminDashboard() {
 
   const handleBanUser = async (userId, isBanned) => {
     try {
-      await axios.patch(`${API_URL}/api/users/${userId}/ban`, { isBanned: !isBanned }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.patch(`${API_URL}/api/users/${userId}/ban`, { isBanned: !isBanned }, { headers: { Authorization: `Bearer ${token}` } });
       toast.success(isBanned ? "User unbanned!" : "User banned!");
       fetchData();
     } catch (err) {
@@ -83,9 +72,7 @@ export default function AdminDashboard() {
   const handleDeleteUser = async (userId) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-      await axios.delete(`${API_URL}/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${API_URL}/api/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("User deleted!");
       fetchData();
     } catch (err) {
@@ -95,9 +82,7 @@ export default function AdminDashboard() {
 
   const handleToggleEbookStatus = async (ebookId) => {
     try {
-      await axios.patch(`${API_URL}/api/ebooks/${ebookId}/status`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.patch(`${API_URL}/api/ebooks/${ebookId}/status`, {}, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("Status updated!");
       fetchData();
     } catch (err) {
@@ -108,9 +93,7 @@ export default function AdminDashboard() {
   const handleDeleteEbook = async (ebookId) => {
     if (!confirm("Are you sure you want to delete this ebook?")) return;
     try {
-      await axios.delete(`${API_URL}/api/ebooks/${ebookId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${API_URL}/api/ebooks/${ebookId}`, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("Ebook deleted!");
       fetchData();
     } catch (err) {
@@ -125,15 +108,18 @@ export default function AdminDashboard() {
     { id: "transactions", label: "Transactions", icon: <FiDollarSign /> },
   ];
 
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-navy pt-24 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3">
             <FiShield className="text-gold text-3xl" />
             <div>
@@ -145,16 +131,13 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                activeTab === tab.id
-                  ? "bg-gold text-navy font-bold"
-                  : "bg-navy-light border border-gold/20 text-gray-400 hover:border-gold/40"
+                activeTab === tab.id ? "bg-gold text-navy font-bold" : "bg-navy-light border border-gold/20 text-gray-400 hover:border-gold/40"
               }`}
             >
               {tab.icon} {tab.label}
@@ -164,16 +147,12 @@ export default function AdminDashboard() {
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-28 bg-navy-light rounded-xl animate-pulse" />
-            ))}
+            {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-navy-light rounded-xl animate-pulse" />)}
           </div>
         ) : (
           <>
-            {/* Overview */}
             {activeTab === "overview" && (
               <div className="space-y-8">
-                {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { label: "Total Users", value: analytics?.totalUsers || 0, icon: <FiUsers />, color: "text-blue-400" },
@@ -181,12 +160,7 @@ export default function AdminDashboard() {
                     { label: "Ebooks Sold", value: analytics?.totalEbooks || 0, icon: <FiBook />, color: "text-gold" },
                     { label: "Total Revenue", value: `$${(analytics?.totalRevenue || 0).toFixed(2)}`, icon: <FiDollarSign />, color: "text-green-400" },
                   ].map((stat) => (
-                    <motion.div
-                      key={stat.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-navy-light border border-gold/10 rounded-xl p-5"
-                    >
+                    <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-navy-light border border-gold/10 rounded-xl p-5">
                       <div className={`${stat.color} text-2xl mb-2`}>{stat.icon}</div>
                       <div className="text-white text-2xl font-bold">{stat.value}</div>
                       <div className="text-gray-400 text-sm">{stat.label}</div>
@@ -194,7 +168,6 @@ export default function AdminDashboard() {
                   ))}
                 </div>
 
-                {/* Genre Distribution */}
                 <div className="bg-navy-light border border-gold/20 rounded-2xl p-6">
                   <h3 className="text-white font-serif font-bold text-xl mb-6">Ebooks by Genre</h3>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -207,7 +180,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Recent Transactions */}
                 <div className="bg-navy-light border border-gold/20 rounded-2xl p-6">
                   <h3 className="text-white font-serif font-bold text-xl mb-6">Recent Transactions</h3>
                   <div className="space-y-3">
@@ -228,7 +200,6 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Users Management */}
             {activeTab === "users" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
@@ -260,9 +231,7 @@ export default function AdminDashboard() {
                             </select>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                              u.isBanned ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"
-                            }`}>
+                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${u.isBanned ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}>
                               {u.isBanned ? "Banned" : "Active"}
                             </span>
                           </td>
@@ -292,7 +261,6 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Ebooks Management */}
             {activeTab === "ebooks" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
@@ -319,25 +287,17 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4 text-gray-400 text-sm">{ebook.writerName}</td>
                           <td className="px-6 py-4 text-gold font-bold">${ebook.price}</td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                              ebook.status === "published" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                            }`}>
+                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${ebook.status === "published" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
                               {ebook.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-gray-400 text-sm">{ebook.totalSales}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleToggleEbookStatus(ebook._id)}
-                                className="p-2 text-gray-400 hover:text-gold transition-colors"
-                              >
+                              <button onClick={() => handleToggleEbookStatus(ebook._id)} className="p-2 text-gray-400 hover:text-gold transition-colors">
                                 {ebook.status === "published" ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                               </button>
-                              <button
-                                onClick={() => handleDeleteEbook(ebook._id)}
-                                className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                              >
+                              <button onClick={() => handleDeleteEbook(ebook._id)} className="p-2 text-gray-400 hover:text-red-400 transition-colors">
                                 <FiTrash2 size={16} />
                               </button>
                             </div>
@@ -350,7 +310,6 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Transactions */}
             {activeTab === "transactions" && (
               <div className="bg-navy-light border border-gold/20 rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
@@ -366,9 +325,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {transactions.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="text-center text-gray-400 py-10">No transactions yet.</td>
-                        </tr>
+                        <tr><td colSpan={5} className="text-center text-gray-400 py-10">No transactions yet.</td></tr>
                       ) : (
                         transactions.map((t) => (
                           <tr key={t._id} className="border-b border-gold/10 hover:bg-navy/50 transition-colors">
@@ -377,9 +334,7 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4 text-gold font-bold">${t.amount}</td>
                             <td className="px-6 py-4 text-gray-400 text-sm">{new Date(t.createdAt).toLocaleDateString()}</td>
                             <td className="px-6 py-4">
-                              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg">
-                                {t.status}
-                              </span>
+                              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg">{t.status}</span>
                             </td>
                           </tr>
                         ))
