@@ -26,6 +26,11 @@ export default function RegisterPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const redirectByRole = (role) => {
+    if (role === "writer") router.push("/dashboard/writer");
+    else router.push("/dashboard/user");
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -42,11 +47,10 @@ export default function RegisterPage() {
         formData.password,
         formData.role
       );
-      toast.success("Account created successfully!");
-      if (user.role === "writer") router.push("/dashboard/writer");
-      else router.push("/dashboard/user");
+      toast.success("Account created successfully! Welcome to Fable 🎉");
+      redirectByRole(user.role);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,11 +60,10 @@ export default function RegisterPage() {
     setGoogleLoading(true);
     try {
       const user = await googleLogin(formData.role);
-      toast.success("Welcome to Fable!");
-      if (user.role === "writer") router.push("/dashboard/writer");
-      else router.push("/dashboard/user");
+      toast.success("Welcome to Fable! 🎉");
+      redirectByRole(user.role);
     } catch (err) {
-      toast.error("Google login failed");
+      toast.error("Google sign-up failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
@@ -86,31 +89,42 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div className="bg-navy-light border border-gold/20 rounded-2xl p-8">
+
           {/* Role Selection */}
           <div className="mb-6">
-            <label className="text-gray-400 text-sm mb-3 block">I want to join as</label>
+            <label className="text-gray-400 text-sm mb-3 block font-medium">
+              I want to join as
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: "user" })}
-                className={`py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                className={`py-4 rounded-xl border text-sm font-medium transition-all duration-200 flex flex-col items-center gap-1 ${
                   formData.role === "user"
                     ? "bg-gold border-gold text-navy font-bold"
-                    : "border-gold/20 text-gray-400 hover:border-gold/40"
+                    : "border-gold/20 text-gray-400 hover:border-gold/40 hover:text-gray-300"
                 }`}
               >
-                📖 Reader
+                <span className="text-2xl">📖</span>
+                <span>Reader</span>
+                <span className={`text-xs font-normal ${formData.role === "user" ? "text-navy/70" : "text-gray-600"}`}>
+                  Browse &amp; buy ebooks
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: "writer" })}
-                className={`py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                className={`py-4 rounded-xl border text-sm font-medium transition-all duration-200 flex flex-col items-center gap-1 ${
                   formData.role === "writer"
                     ? "bg-gold border-gold text-navy font-bold"
-                    : "border-gold/20 text-gray-400 hover:border-gold/40"
+                    : "border-gold/20 text-gray-400 hover:border-gold/40 hover:text-gray-300"
                 }`}
               >
-                ✍️ Writer
+                <span className="text-2xl">✍️</span>
+                <span>Writer</span>
+                <span className={`text-xs font-normal ${formData.role === "writer" ? "text-navy/70" : "text-gray-600"}`}>
+                  Publish your ebooks
+                </span>
               </button>
             </div>
           </div>
@@ -122,7 +136,9 @@ export default function RegisterPage() {
             className="w-full flex items-center justify-center gap-3 py-3 border border-gold/20 hover:border-gold/40 rounded-xl text-gray-300 hover:text-white transition-all duration-200 mb-6 disabled:opacity-50"
           >
             <FcGoogle size={22} />
-            {googleLoading ? "Signing up..." : `Continue with Google as ${formData.role === "user" ? "Reader" : "Writer"}`}
+            {googleLoading
+              ? "Signing up..."
+              : `Continue with Google as ${formData.role === "user" ? "Reader" : "Writer"}`}
           </button>
 
           <div className="flex items-center gap-4 mb-6">
@@ -175,6 +191,7 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  minLength={6}
                   placeholder="••••••••"
                   className="w-full pl-10 pr-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors duration-200"
                 />
@@ -202,13 +219,15 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 mt-2"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading
+                ? "Creating account..."
+                : `Create ${formData.role === "writer" ? "Writer" : "Reader"} Account`}
             </button>
           </form>
 
           <p className="text-center text-gray-400 text-sm mt-6">
             Already have an account?{" "}
-            <Link href="/login" className="text-gold hover:underline">
+            <Link href="/login" className="text-gold hover:underline font-medium">
               Sign in
             </Link>
           </p>
