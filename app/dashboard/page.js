@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -10,13 +9,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+    if (!user) { router.push("/login"); return; }
     if (user.role === "admin") router.push("/dashboard/admin");
     else if (user.role === "writer") router.push("/dashboard/writer");
-    else router.push("/dashboard/user");
+    else router.push("/dashboard/reader");
   }, [user, loading]);
 
   return (

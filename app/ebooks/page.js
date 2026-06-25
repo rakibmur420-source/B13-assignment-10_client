@@ -1,234 +1,121 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { FiSearch, FiFilter, FiBook } from "react-icons/fi";
-import Footer from "@/components/Footer";
+import { FiSearch } from "react-icons/fi";
 
-const genres = ["Fiction", "Mystery", "Romance", "Sci-Fi", "Fantasy", "Horror", "Biography", "Self-Help", "History", "Other"];
+const SEED_BOOKS = [
+  { _id: "seed1", title: "The Last Ember of Valtheria", writerName: "Evelyn Hart", genre: "Fantasy", price: 12.99, coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead.", totalSales: 190, status: "published" },
+  { _id: "seed2", title: "Whispers in Ash", writerName: "Noah Blake", genre: "Mystery", price: 9.99, coverImage: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop", description: "A detective hunts a killer through the fog of a dying city.", totalSales: 214, status: "published" },
+  { _id: "seed3", title: "Orbit of Dreams", writerName: "Lena Carter", genre: "Sci-Fi", price: 11.50, coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop", description: "Two astronauts fall in love on a mission to the edge of the solar system.", totalSales: 145, status: "published" },
+  { _id: "seed4", title: "Moonlit Letters", writerName: "Emma Rivers", genre: "Romance", price: 9.99, coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&h=600&fit=crop", description: "Two strangers exchange anonymous letters that slowly transform their lives.", totalSales: 312, status: "published" },
+  { _id: "seed5", title: "The Garden of Forgotten Stars", writerName: "Lillian Moore", genre: "Mystery", price: 10.99, coverImage: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead.", totalSales: 190, status: "published" },
+  { _id: "seed6", title: "Echoes of Tomorrow", writerName: "James Holt", genre: "Sci-Fi", price: 13.50, coverImage: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&h=600&fit=crop", description: "A scientist travels back in time only to find the future has already changed.", totalSales: 98, status: "published" },
+  { _id: "seed7", title: "The Clockmaker's Promise", writerName: "Sophia Reed", genre: "Fiction", price: 8.99, coverImage: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop", description: "A clockmaker discovers his creations hold the power to stop time.", totalSales: 76, status: "published" },
+  { _id: "seed8", title: "Midnight Library", writerName: "Oliver Stone", genre: "Fantasy", price: 14.99, coverImage: "https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400&h=600&fit=crop", description: "Between life and death there is a library, and each book is a different life you could have lived.", totalSales: 421, status: "published" },
+];
 
-export default function EbooksPage() {
+const GENRES = ["All", "Fiction", "Mystery", "Romance", "Sci-Fi", "Fantasy", "Horror", "Thriller", "Adventure", "Biography", "Self-Help", "History", "Drama"];
+
+function EbooksContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [ebooks, setEbooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-
+  const [books, setBooks] = useState(SEED_BOOKS);
   const [search, setSearch] = useState("");
-  const [genre, setGenre] = useState(searchParams.get("genre") || "");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState("");
-
+  const [genre, setGenre] = useState(searchParams.get("genre") || "All");
+  const [loading, setLoading] = useState(true);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const fetchEbooks = async (page = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (genre) params.append("genre", genre);
-      if (minPrice) params.append("minPrice", minPrice);
-      if (maxPrice) params.append("maxPrice", maxPrice);
-      if (sort) params.append("sort", sort);
-      params.append("page", page);
-      params.append("limit", 12);
-
-      const res = await axios.get(`${API_URL}/api/ebooks?${params}`);
-      setEbooks(res.data.ebooks);
-      setTotal(res.data.total);
-      setPages(res.data.pages);
-      setCurrentPage(page);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchEbooks(1);
-  }, [genre]);
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (genre && genre !== "All") params.set("genre", genre);
+    axios.get(`${API_URL}/api/ebooks?${params.toString()}`)
+      .then(r => { if (r.data?.ebooks?.length > 0) setBooks(r.data.ebooks); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [search, genre]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchEbooks(1);
-  };
+  const filtered = books.filter(b => {
+    const matchSearch = !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.writerName.toLowerCase().includes(search.toLowerCase());
+    const matchGenre = genre === "All" || b.genre === genre;
+    return matchSearch && matchGenre;
+  });
 
   return (
-    <main className="min-h-screen bg-navy pt-24 pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10"
-        >
-          <h1 className="text-4xl font-serif font-bold text-white mb-3">
-            Browse <span className="text-gold">Ebooks</span>
-          </h1>
-          <p className="text-gray-400">{total} ebooks available</p>
-        </motion.div>
-
-        {/* Search & Filter */}
-        <div className="bg-navy-light border border-gold/20 rounded-2xl p-6 mb-8">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title or writer..."
-                className="w-full pl-10 pr-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Genre */}
-            <select
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              className="px-4 py-3 bg-navy border border-gold/20 rounded-xl text-gray-300 focus:outline-none focus:border-gold/50"
-            >
-              <option value="">All Genres</option>
-              {genres.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-
-            {/* Price Range */}
-            <input
-              type="number"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              placeholder="Min $"
-              className="w-24 px-3 py-3 bg-navy border border-gold/20 rounded-xl text-gray-300 focus:outline-none focus:border-gold/50"
-            />
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              placeholder="Max $"
-              className="w-24 px-3 py-3 bg-navy border border-gold/20 rounded-xl text-gray-300 focus:outline-none focus:border-gold/50"
-            />
-
-            {/* Sort */}
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="px-4 py-3 bg-navy border border-gold/20 rounded-xl text-gray-300 focus:outline-none focus:border-gold/50"
-            >
-              <option value="">Newest</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-            </select>
-
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200 flex items-center gap-2"
-            >
-              <FiFilter /> Filter
-            </button>
-          </form>
+    <main className="bg-navy min-h-screen pt-20 px-4 pb-16">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 pt-6">
+          <h1 className="text-3xl font-serif font-bold text-white mb-1">All Books ({filtered.length})</h1>
+          <p className="text-gray-400 text-sm">Discover your next favorite read.</p>
         </div>
 
-        {/* Ebooks Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="bg-navy-light rounded-xl h-72 animate-pulse" />
-            ))}
+        {/* Search + Genre Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search books..."
+              className="w-full pl-10 pr-4 py-3 bg-navy-light border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none"
+            />
           </div>
-        ) : ebooks.length === 0 ? (
+          <select value={genre} onChange={e => setGenre(e.target.value)}
+            className="px-4 py-3 bg-navy-light border border-gold/20 rounded-xl text-white focus:outline-none min-w-[160px]">
+            {GENRES.map(g => <option key={g} value={g}>{g === "All" ? "All Genres" : g}</option>)}
+          </select>
+        </div>
+
+        {/* Books Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <FiBook className="text-gold text-5xl mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">No ebooks found matching your filters.</p>
-            <button
-              onClick={() => { setSearch(""); setGenre(""); setMinPrice(""); setMaxPrice(""); setSort(""); fetchEbooks(1); }}
-              className="mt-4 px-6 py-3 bg-gold text-navy font-bold rounded-xl"
-            >
-              Clear Filters
-            </button>
+            <p className="text-4xl mb-4">📭</p>
+            <p className="text-white font-semibold mb-2">No books found</p>
+            <p className="text-gray-400 text-sm">Try a different search or genre.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {ebooks.map((ebook, i) => (
-              <motion.div
-                key={ebook._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <Link href={`/ebooks/${ebook._id}`}>
-                  <div className="bg-navy-light border border-gold/10 hover:border-gold/30 rounded-xl overflow-hidden transition-all duration-200 cursor-pointer h-full">
-                    <div className="relative">
-                      <img
-                        src={ebook.coverImage}
-                        alt={ebook.title}
-                        className="w-full h-52 object-cover"
-                      />
-                      <span className="absolute top-2 right-2 px-2 py-1 bg-gold text-navy text-xs font-bold rounded-lg">
-                        {ebook.genre}
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-white font-semibold truncate">{ebook.title}</h3>
-                      <p className="text-gray-400 text-sm truncate mt-1">{ebook.writerName}</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-gold font-bold">${ebook.price}</span>
-                        <span className="text-xs text-gray-500">{ebook.totalSales} sold</span>
-                      </div>
-                    </div>
+            {filtered.map((book) => (
+              <div key={book._id}
+                onClick={() => router.push(`/ebooks/${book._id}`)}
+                className="group cursor-pointer bg-navy-light border border-gold/10 rounded-2xl overflow-hidden hover:border-gold/30 transition-all duration-300 hover:-translate-y-1">
+                <div className="h-52 overflow-hidden bg-navy">
+                  <img
+                    src={book.coverImage || "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop"}
+                    alt={book.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4">
+                  <span className="text-xs text-gold bg-gold/10 px-2 py-0.5 rounded-full">{book.genre}</span>
+                  <h3 className="text-white font-semibold mt-2 mb-1 line-clamp-1 text-sm">{book.title}</h3>
+                  <p className="text-gray-400 text-xs mb-2">by {book.writerName}</p>
+                  <p className="text-gray-500 text-xs line-clamp-2 mb-3">{book.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gold font-bold text-sm">${book.price}</span>
+                    {book.totalSales > 0 && <span className="text-gray-500 text-xs">Sales: {book.totalSales}</span>}
                   </div>
-                </Link>
-              </motion.div>
+                  {book.status === "published" && (
+                    <span className="mt-2 inline-block px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">published</span>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
-
-        {/* Pagination */}
-        {pages > 1 && (
-          <div className="flex justify-center gap-2 mt-10">
-            <button
-              onClick={() => fetchEbooks(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-navy-light border border-gold/20 text-gray-300 rounded-xl disabled:opacity-50 hover:border-gold/40 transition-all"
-            >
-              Previous
-            </button>
-            {[...Array(pages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => fetchEbooks(i + 1)}
-                className={`px-4 py-2 rounded-xl transition-all ${
-                  currentPage === i + 1
-                    ? "bg-gold text-navy font-bold"
-                    : "bg-navy-light border border-gold/20 text-gray-300 hover:border-gold/40"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => fetchEbooks(currentPage + 1)}
-              disabled={currentPage === pages}
-              className="px-4 py-2 bg-navy-light border border-gold/20 text-gray-300 rounded-xl disabled:opacity-50 hover:border-gold/40 transition-all"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="mt-16">
-        <Footer />
       </div>
     </main>
+  );
+}
+
+export default function EbooksPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-navy flex items-center justify-center"><div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" /></div>}>
+      <EbooksContent />
+    </Suspense>
   );
 }
