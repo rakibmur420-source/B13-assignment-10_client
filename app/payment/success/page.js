@@ -1,57 +1,68 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
-import { motion } from "framer-motion";
-import { FiCheckCircle, FiBook } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 import Link from "next/link";
-import toast from "react-hot-toast";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, token } = useAuth();
-  const [verifying, setVerifying] = useState(true);
-  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState("verifying"); // verifying | success | error
+  const [ebookTitle, setEbookTitle] = useState("");
 
+  const sessionId = searchParams.get("session_id");
+  const ebookId = searchParams.get("ebook_id");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    const sessionId = searchParams.get("session_id");
-    const ebookId = searchParams.get("ebook_id");
+    if (!sessionId || !ebookId || !token) return;
+    verifyPayment();
+  }, [sessionId, ebookId, token]);
 
-    if (!sessionId || !ebookId || !user) {
-      router.push("/");
-      return;
-    }
-
-    verifyPayment(sessionId, ebookId);
-  }, [user]);
-
-  const verifyPayment = async (sessionId, ebookId) => {
+  const verifyPayment = async () => {
     try {
-      await axios.post(
+      const res = await axios.post(
         `${API_URL}/api/transactions/verify-payment`,
         { sessionId, ebookId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess(true);
-      toast.success("Payment successful!");
+      setEbookTitle(res.data?.transaction?.ebookTitle || "your ebook");
+      setStatus("success");
     } catch (err) {
-      toast.error("Payment verification failed");
-    } finally {
-      setVerifying(false);
+      // If already purchased, still show success
+      if (err.response?.data?.message === "Already purchased") {
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
     }
   };
 
-  if (verifying) {
+  if (status === "verifying") {
     return (
       <main className="min-h-screen bg-navy flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Verifying your payment...</p>
+          <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin mx-auto mb-6" />
+          <p className="text-white text-lg font-medium">Verifying your payment...</p>
+          <p className="text-gray-400 text-sm mt-2">Please wait a moment</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <main className="min-h-screen bg-navy flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-6">❌</div>
+          <h1 className="text-white text-2xl font-serif font-bold mb-3">Payment Verification Failed</h1>
+          <p className="text-gray-400 mb-8">We couldn't verify your payment. If you were charged, please contact support.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/ebooks" className="px-6 py-3 bg-gold text-navy font-bold rounded-xl">Browse Books</Link>
+            <Link href="/dashboard" className="px-6 py-3 border border-gold/30 text-gold rounded-xl">My Dashboard</Link>
+          </div>
         </div>
       </main>
     );
@@ -59,36 +70,48 @@ export default function PaymentSuccessPage() {
 
   return (
     <main className="min-h-screen bg-navy flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="text-center max-w-md"
-      >
-        <div className="bg-navy-light border border-gold/20 rounded-2xl p-10">
-          <FiCheckCircle className="text-green-400 text-6xl mx-auto mb-6" />
-          <h1 className="text-3xl font-serif font-bold text-white mb-3">
-            Payment Successful!
-          </h1>
-          <p className="text-gray-400 mb-8">
-            Your ebook has been added to your library. Enjoy reading!
-          </p>
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/dashboard/user"
-              className="py-3 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              <FiBook /> Go to My Library
-            </Link>
-            <Link
-              href="/ebooks"
-              className="py-3 border border-gold/20 hover:border-gold/40 text-gray-300 rounded-xl transition-all duration-200"
-            >
-              Browse More Ebooks
-            </Link>
-          </div>
+      <div className="text-center max-w-md">
+        {/* Success animation */}
+        <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-green-500/40">
+          <span className="text-5xl">✅</span>
         </div>
-      </motion.div>
+
+        <h1 className="text-white text-3xl font-serif font-bold mb-3">Payment Successful!</h1>
+        <p className="text-gray-400 mb-2">
+          {ebookTitle ? (
+            <>You now have access to <span className="text-gold font-medium">"{ebookTitle}"</span></>
+          ) : (
+            "Your purchase was completed successfully."
+          )}
+        </p>
+        <p className="text-gray-500 text-sm mb-10">
+          The ebook has been added to your library.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => router.push("/dashboard/reader/purchased")}
+            className="px-6 py-3 bg-gold hover:bg-yellow-500 text-navy font-bold rounded-xl transition-all"
+          >
+            Go to My Library
+          </button>
+          <Link href="/ebooks" className="px-6 py-3 border border-gold/30 hover:border-gold text-gold rounded-xl transition-all">
+            Browse More Books
+          </Link>
+        </div>
+      </div>
     </main>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </main>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
