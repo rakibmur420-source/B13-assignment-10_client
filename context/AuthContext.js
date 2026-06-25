@@ -1,11 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import axios from "axios";
 
@@ -19,28 +15,23 @@ export const AuthProvider = ({ children }) => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-  try {
-    const savedUser = localStorage.getItem("fable_user");
-    const savedToken = localStorage.getItem("fable_token");
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
-      setToken(savedToken);
+    try {
+      const savedUser = localStorage.getItem("fable_user");
+      const savedToken = localStorage.getItem("fable_token");
+      if (savedUser && savedToken) {
+        setUser(JSON.parse(savedUser));
+        setToken(savedToken);
+      }
+    } catch (err) {
+      localStorage.removeItem("fable_user");
+      localStorage.removeItem("fable_token");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    localStorage.removeItem("fable_user");
-    localStorage.removeItem("fable_token");
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  }, []);
 
   const register = async (name, email, password, role) => {
-    const res = await axios.post(`${API_URL}/api/auth/register`, {
-      name,
-      email,
-      password,
-      role,
-    });
+    const res = await axios.post(`${API_URL}/api/auth/register`, { name, email, password, role });
     const { token, user } = res.data;
     localStorage.setItem("fable_token", token);
     localStorage.setItem("fable_user", JSON.stringify(user));
@@ -50,10 +41,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const res = await axios.post(`${API_URL}/api/auth/login`, {
-      email,
-      password,
-    });
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
     const { token, user } = res.data;
     localStorage.setItem("fable_token", token);
     localStorage.setItem("fable_user", JSON.stringify(user));
@@ -66,10 +54,7 @@ export const AuthProvider = ({ children }) => {
     const result = await signInWithPopup(auth, googleProvider);
     const { displayName, email, photoURL } = result.user;
     const res = await axios.post(`${API_URL}/api/auth/google`, {
-      name: displayName,
-      email,
-      photoURL,
-      role: role || "user",
+      name: displayName, email, photoURL, role: role || "user",
     });
     const { token, user } = res.data;
     localStorage.setItem("fable_token", token);
@@ -80,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try { await signOut(auth); } catch (e) {}
     localStorage.removeItem("fable_token");
     localStorage.removeItem("fable_user");
     setToken(null);
@@ -88,9 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, loading, register, login, googleLogin, logout }}
-    >
+    <AuthContext.Provider value={{ user, token, loading, register, login, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );
