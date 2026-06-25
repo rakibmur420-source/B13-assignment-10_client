@@ -24,3 +24,39 @@ html {
 body {
   font-family: 'Georgia', serif;
 }
+
+/* Light mode overrides */
+.light body,
+html.light {
+  background-color: #f8f5f0;
+  color: #1a1a2e;
+}
+
+.light .bg-navy {
+  background-color: #f8f5f0 !important;
+}
+
+.light .bg-navy-light {
+  background-color: #ffffff !important;
+}
+
+.light .text-white {
+  color: #1a1a2e !important;
+}
+
+.light .text-gray-300 {
+  color: #4a4a6a !important;
+}
+
+.light .text-gray-400 {
+  color: #6b6b8a !important;
+}
+
+.light .border-gold\/20 {
+  border-color: rgba(180, 140, 60, 0.3) !important;
+}
+
+.light nav {
+  background-color: rgba(248, 245, 240, 0.97) !important;
+  border-bottom-color: rgba(180, 140, 60, 0.3) !important;
+}

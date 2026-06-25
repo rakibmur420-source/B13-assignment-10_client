@@ -1,268 +1,154 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { FiArrowRight, FiBook, FiUsers, FiStar } from "react-icons/fi";
-import Footer from "@/components/Footer";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
-const genres = [
+const SEED_BOOKS = [
+  { _id: "seed1", title: "The Last Ember of Valtheria", writerName: "Evelyn Hart", genre: "Fantasy", price: 12.99, coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead." },
+  { _id: "seed2", title: "Whispers in Ash", writerName: "Noah Blake", genre: "Mystery", price: 9.99, coverImage: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop", description: "A detective hunts a killer through the fog of a dying city." },
+  { _id: "seed3", title: "Orbit of Dreams", writerName: "Lena Carter", genre: "Sci-Fi", price: 11.50, coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop", description: "Two astronauts fall in love on a mission to the edge of the solar system." },
+  { _id: "seed4", title: "Moonlit Letters", writerName: "Emma Rivers", genre: "Romance", price: 9.99, coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&h=600&fit=crop", description: "Two strangers exchange anonymous letters that slowly transform their lives." },
+  { _id: "seed5", title: "The Garden of Forgotten Stars", writerName: "Lillian Moore", genre: "Mystery", price: 10.99, coverImage: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead." },
+  { _id: "seed6", title: "Echoes of Tomorrow", writerName: "James Holt", genre: "Sci-Fi", price: 13.50, coverImage: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&h=600&fit=crop", description: "A scientist travels back in time only to find the future has already changed." },
+];
+
+const TOP_WRITERS = [
+  { name: "Evelyn Hart", sales: "12.4k Sales" },
+  { name: "Noah Blake", sales: "10.1k Sales" },
+  { name: "Sophia Reed", sales: "9.6k Sales" },
+];
+
+const GENRES = [
   { name: "Fiction", emoji: "📖" },
   { name: "Mystery", emoji: "🔍" },
-  { name: "Romance", emoji: "💕" },
+  { name: "Romance", emoji: "❤️" },
   { name: "Sci-Fi", emoji: "🚀" },
   { name: "Fantasy", emoji: "🧙" },
   { name: "Horror", emoji: "👻" },
-  { name: "Biography", emoji: "👤" },
-  { name: "Self-Help", emoji: "💡" },
-  { name: "History", emoji: "🏛️" },
-  { name: "Other", emoji: "📚" },
+  { name: "Thriller", emoji: "⚡" },
+  { name: "Adventure", emoji: "🗺️" },
 ];
 
-export default function Home() {
-  const [featuredEbooks, setFeaturedEbooks] = useState([]);
-  const [topWriters, setTopWriters] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+export default function HomePage() {
+  const [featuredBooks, setFeaturedBooks] = useState(SEED_BOOKS);
+  const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [ebooksRes, writersRes] = await Promise.all([
-          axios.get(`${API_URL}/api/ebooks/featured`),
-          axios.get(`${API_URL}/api/ebooks/top-writers`),
-        ]);
-        setFeaturedEbooks(ebooksRes.data);
-        setTopWriters(writersRes.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    axios.get(`${API_URL}/api/ebooks/featured`)
+      .then(r => { if (r.data?.length > 0) setFeaturedBooks(r.data); })
+      .catch(() => {});
   }, []);
 
   return (
-    <main className="min-h-screen bg-navy dark:bg-navy">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy-light to-navy" />
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, #F5A623 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, #800020 0%, transparent 50%)`,
-          }}
-        />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <span className="inline-block px-4 py-2 bg-gold/10 border border-gold/30 rounded-full text-gold text-sm font-medium mb-6">
-              ✨ The World's Best Ebook Platform
-            </span>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight">
-              Discover & Read
-              <span className="text-gold block">Original Ebooks</span>
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-              Connect with talented writers, explore thousands of original ebooks,
-              and dive into stories that move you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/ebooks"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gold hover:bg-gold-dark text-navy font-bold rounded-xl text-lg transition-all duration-200 hover:scale-105"
-              >
-                Browse Ebooks <FiArrowRight />
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 border border-gold/30 hover:border-gold text-gold rounded-xl text-lg transition-all duration-200 hover:bg-gold/10"
-              >
-                Become a Writer
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="grid grid-cols-3 gap-8 max-w-lg mx-auto mt-20"
-          >
-            {[
-              { icon: <FiBook />, label: "Ebooks", value: "500+" },
-              { icon: <FiUsers />, label: "Writers", value: "200+" },
-              { icon: <FiStar />, label: "Readers", value: "10K+" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-gold text-2xl mb-1 flex justify-center">{stat.icon}</div>
-                <div className="text-white text-2xl font-bold">{stat.value}</div>
-                <div className="text-gray-400 text-sm">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Featured Ebooks */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-serif font-bold text-white mb-4">
-            Featured <span className="text-gold">Ebooks</span>
-          </h2>
-          <p className="text-gray-400">Handpicked stories just for you</p>
-        </motion.div>
-
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-navy-light rounded-xl h-64 animate-pulse" />
-            ))}
-          </div>
-        ) : featuredEbooks.length === 0 ? (
-          <div className="text-center py-20">
-            <FiBook className="text-gold text-5xl mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">No ebooks yet. Be the first to publish!</p>
-            <Link href="/register" className="inline-block mt-4 px-6 py-3 bg-gold text-navy font-bold rounded-xl">
+    <main className="bg-navy min-h-screen">
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center justify-center text-center px-4 pt-16">
+        <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-navy-light opacity-90" />
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1.5 bg-gold/10 border border-gold/20 rounded-full text-gold text-sm font-medium mb-6">
+            📚 Discover. Read. Create.
+          </span>
+          <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight">
+            Every Great Story<br />
+            <span className="text-gold">Starts Here</span>
+          </h1>
+          <p className="text-gray-300 text-lg mb-10 leading-relaxed max-w-2xl mx-auto">
+            Explore thousands of ebooks from talented writers around the world. Buy, read, and bookmark your favorites — or publish your own.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/ebooks" className="px-8 py-3.5 bg-gold hover:bg-yellow-500 text-navy font-bold rounded-xl text-lg transition-all hover:scale-105">
+              Browse Books
+            </Link>
+            <Link href="/register" className="px-8 py-3.5 border border-gold/30 hover:border-gold text-gold font-semibold rounded-xl text-lg transition-all">
               Start Writing
             </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {featuredEbooks.map((ebook, i) => (
-              <motion.div
-                key={ebook._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <Link href={`/ebooks/${ebook._id}`}>
-                  <div className="bg-navy-light rounded-xl overflow-hidden border border-gold/10 hover:border-gold/30 transition-all duration-200 cursor-pointer">
-                    <img
-                      src={ebook.coverImage}
-                      alt={ebook.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-3">
-                      <h3 className="text-white text-sm font-semibold truncate">{ebook.title}</h3>
-                      <p className="text-gray-400 text-xs truncate">{ebook.writerName}</p>
-                      <p className="text-gold text-sm font-bold mt-1">${ebook.price}</p>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        <div className="text-center mt-10">
-          <Link
-            href="/ebooks"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-gold/30 hover:border-gold text-gold rounded-xl transition-all duration-200 hover:bg-gold/10"
-          >
-            View All Ebooks <FiArrowRight />
-          </Link>
         </div>
       </section>
 
-      {/* Top Writers */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-serif font-bold text-white mb-4">
-            Top <span className="text-gold">Writers</span>
-          </h2>
-          <p className="text-gray-400">Meet our most celebrated authors</p>
-        </motion.div>
-
-        {topWriters.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-400">No writers yet.</p>
+      {/* Featured Books */}
+      <section className="py-20 px-4 max-w-7xl mx-auto">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-serif font-bold text-white">Featured Ebooks</h2>
+            <p className="text-gray-400 mt-2">Hand-picked stories for every reader.</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
-            {topWriters.map((writer, i) => (
-              <motion.div
-                key={writer._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-navy-light border border-gold/10 hover:border-gold/30 rounded-xl p-6 text-center transition-all duration-200"
-              >
-                <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-gold text-2xl font-bold">
-                    {writer.writerName?.charAt(0)}
-                  </span>
+          <Link href="/ebooks" className="text-gold hover:underline text-sm font-medium">View all →</Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+          {featuredBooks.slice(0, 6).map((book) => (
+            <div key={book._id}
+              onClick={() => router.push(`/ebooks/${book._id}`)}
+              className="group cursor-pointer bg-navy-light border border-gold/10 rounded-2xl overflow-hidden hover:border-gold/30 transition-all duration-300 hover:-translate-y-1">
+              <div className="h-52 overflow-hidden bg-navy">
+                <img src={book.coverImage || "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop"}
+                  alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <div className="p-4">
+                <span className="text-xs text-gold bg-gold/10 px-2 py-0.5 rounded-full">{book.genre}</span>
+                <h3 className="text-white font-semibold mt-2 mb-1 line-clamp-1">{book.title}</h3>
+                <p className="text-gray-400 text-xs mb-3">by {book.writerName}</p>
+                <p className="text-gray-500 text-xs line-clamp-2 mb-3">{book.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-gold font-bold">${book.price}</span>
+                  <button className="px-3 py-1 bg-gold/10 hover:bg-gold/20 text-gold text-xs font-medium rounded-lg transition-all">View Ebook</button>
                 </div>
-                <h3 className="text-white font-semibold">{writer.writerName}</h3>
-                <p className="text-gold text-sm mt-1">{writer.totalSales} sales</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Genres */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-serif font-bold text-white mb-4">
-            Explore <span className="text-gold">Genres</span>
-          </h2>
-          <p className="text-gray-400">Find your perfect read by genre</p>
-        </motion.div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {genres.map((genre, i) => (
-            <motion.div
-              key={genre.name}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Link
-                href={`/ebooks?genre=${genre.name}`}
-                className="block bg-navy-light border border-gold/10 hover:border-gold/40 hover:bg-gold/5 rounded-xl p-4 text-center transition-all duration-200"
-              >
-                <span className="text-3xl mb-2 block">{genre.emoji}</span>
-                <span className="text-gray-300 text-sm font-medium">{genre.name}</span>
-              </Link>
-            </motion.div>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      <Footer />
+      {/* Top Writers */}
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="mb-10">
+          <h2 className="text-3xl font-serif font-bold text-white">Top Writers</h2>
+          <p className="text-gray-400 mt-2">Celebrating authors loved by readers.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TOP_WRITERS.map((w, i) => (
+            <div key={w.name} className="bg-navy-light border border-gold/10 rounded-2xl p-8 text-center hover:border-gold/30 transition-all">
+              <div className="w-20 h-20 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-4">
+                <span className="text-gold text-2xl font-bold">{w.name.charAt(0)}</span>
+              </div>
+              <h3 className="text-white font-semibold text-lg">{w.name}</h3>
+              <p className="text-gray-400 text-sm mt-1">{w.sales}</p>
+              {i === 0 && <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-gold/10 text-gold rounded-full">🏆 Top Author</span>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Browse by Genre */}
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="mb-10">
+          <h2 className="text-3xl font-serif font-bold text-white">Browse by Genre</h2>
+          <p className="text-gray-400 mt-2">Whatever you're in the mood for, there's a story waiting.</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {GENRES.map((g) => (
+            <button key={g.name}
+              onClick={() => router.push(`/ebooks?genre=${g.name}`)}
+              className="bg-navy-light border border-gold/10 hover:border-gold/40 hover:bg-gold/5 rounded-2xl p-8 text-center transition-all duration-200 group">
+              <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{g.emoji}</div>
+              <span className="text-gray-300 group-hover:text-white font-medium transition-colors">{g.name}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center bg-navy-light border border-gold/20 rounded-3xl p-12">
+          <h2 className="text-3xl font-serif font-bold text-white mb-4">Ready to Share Your Story?</h2>
+          <p className="text-gray-400 mb-8">Join thousands of writers already publishing on Fable. It's free to start.</p>
+          <Link href="/register" className="inline-block px-8 py-3.5 bg-gold hover:bg-yellow-500 text-navy font-bold rounded-xl text-lg transition-all hover:scale-105">
+            Become a Writer
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
