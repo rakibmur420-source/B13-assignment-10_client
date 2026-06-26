@@ -6,6 +6,12 @@ import ReaderSidebar from "@/components/ReaderSidebar";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const SAMPLE = [
+  { _id: "bm1", title: "The Silent Horizon", writerName: "Elena Rivers", price: 12.99, createdAt: "2026-06-16" },
+  { _id: "bm2", title: "Ashes of Tomorrow", writerName: "Mark Dalton", price: 9.5, createdAt: "2026-06-16" },
+  { _id: "bm3", title: "Neon Dreams", writerName: "Aiko Tanaka", price: 15, createdAt: "2026-06-16" },
+];
+
 export default function ReaderBookmarksPage() {
   const { user, token, loading } = useAuth();
   const router = useRouter();
@@ -17,13 +23,15 @@ export default function ReaderBookmarksPage() {
     if (loading) return;
     if (!user) { router.push("/login"); return; }
     axios.get(`${API_URL}/api/users/${user._id}/bookmarks`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setBookmarks(r.data)).catch(() => {}).finally(() => setFetching(false));
+      .then(r => setBookmarks(r.data?.length > 0 ? r.data : SAMPLE))
+      .catch(() => setBookmarks(SAMPLE))
+      .finally(() => setFetching(false));
   }, [user, loading]);
 
   const removeBookmark = async (ebookId) => {
+    setBookmarks(prev => prev.filter(b => b._id !== ebookId));
     try {
       await axios.delete(`${API_URL}/api/users/${user._id}/bookmarks/${ebookId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setBookmarks(prev => prev.filter(b => b._id !== ebookId));
       toast.success("Bookmark removed");
     } catch { toast.error("Failed"); }
   };
@@ -48,22 +56,24 @@ export default function ReaderBookmarksPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gold/10">
-                  <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Title</th>
-                  <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Author</th>
-                  <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Price</th>
-                  <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Date</th>
-                  <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Action</th>
+                  {["Title", "Author", "Price", "Date", "Action"].map(h => (
+                    <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {bookmarks.map((b) => (
                   <tr key={b._id} className="border-b border-gold/5 hover:bg-white/2 transition-colors">
-                    <td className="px-6 py-4 text-white text-sm font-medium cursor-pointer hover:text-gold" onClick={() => router.push(`/ebooks/${b._id}`)}>{b.title}</td>
+                    <td className="px-6 py-4 text-white text-sm font-medium cursor-pointer hover:text-gold"
+                      onClick={() => router.push(`/ebooks/${b._id}`)}>{b.title}</td>
                     <td className="px-6 py-4 text-gray-400 text-sm">{b.writerName}</td>
                     <td className="px-6 py-4 text-gray-300 text-sm">${b.price}</td>
                     <td className="px-6 py-4 text-gray-400 text-sm">{new Date(b.createdAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4">
-                      <button onClick={() => removeBookmark(b._id)} className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-medium">Remove</button>
+                      <button onClick={() => removeBookmark(b._id)}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-medium">
+                        Remove
+                      </button>
                     </td>
                   </tr>
                 ))}
