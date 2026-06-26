@@ -26,9 +26,10 @@ export default function WriterDashboard() {
   }, [user, loading]);
 
   const fetchStats = async () => {
+    const userId = user.id || user._id;
     try {
       const [booksRes, salesRes] = await Promise.all([
-        axios.get(`${API_URL}/api/ebooks/writer/${user._id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/ebooks/writer/${userId}`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/api/transactions/my-sales`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const books = booksRes.data || [];
@@ -57,8 +58,6 @@ export default function WriterDashboard() {
           <h1 className="text-2xl font-serif font-bold text-white">Welcome back, Writer 👍</h1>
           <p className="text-gray-400 text-sm mt-1">Manage your stories, track your growth, and connect with your readers.</p>
         </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statCards.map((s) => (
             <div key={s.label} className="bg-navy-light border border-gold/10 rounded-xl p-5">
@@ -68,8 +67,6 @@ export default function WriterDashboard() {
             </div>
           ))}
         </div>
-
-        {/* Recent Activity */}
         <div className="bg-navy-light border border-gold/10 rounded-2xl p-6 mb-6">
           <h2 className="text-white font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-0">
@@ -80,22 +77,14 @@ export default function WriterDashboard() {
             ))}
           </div>
         </div>
-
-        {/* Quick Actions */}
         <div className="bg-navy-light border border-gold/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">Quick Actions</h2>
             <span className="text-gray-500 text-xs">This Month</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => router.push("/dashboard/writer/add")}
-              className="py-3 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold rounded-xl text-sm font-medium transition-all">
-              + Add New Book
-            </button>
-            <button onClick={() => router.push("/dashboard/writer/sales")}
-              className="py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl text-sm font-medium transition-all">
-              View Sales
-            </button>
+            <button onClick={() => router.push("/dashboard/writer/add")} className="py-3 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold rounded-xl text-sm font-medium transition-all">+ Add New Book</button>
+            <button onClick={() => router.push("/dashboard/writer/sales")} className="py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl text-sm font-medium transition-all">View Sales</button>
           </div>
         </div>
       </main>

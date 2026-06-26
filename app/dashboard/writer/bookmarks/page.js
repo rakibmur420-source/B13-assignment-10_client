@@ -21,7 +21,8 @@ export default function WriterBookmarksPage() {
   useEffect(() => {
     if (loading) return;
     if (!user || user.role !== "writer") { router.push("/"); return; }
-    axios.get(`${API_URL}/api/users/${user._id}/bookmarks`, { headers: { Authorization: `Bearer ${token}` } })
+    const userId = user.id || user._id;
+    axios.get(`${API_URL}/api/users/${userId}/bookmarks`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setBookmarks(r.data?.length > 0 ? r.data : SAMPLE))
       .catch(() => setBookmarks(SAMPLE))
       .finally(() => setFetching(false));
@@ -31,33 +32,25 @@ export default function WriterBookmarksPage() {
     <div className="flex bg-navy min-h-screen">
       <WriterSidebar />
       <main className="flex-1 pt-20 px-8 pb-10">
-        <div className="mb-6">
-          <h1 className="text-2xl font-serif font-bold text-white flex items-center gap-2">📚 Bookmarked Books</h1>
-        </div>
+        <h1 className="text-2xl font-serif font-bold text-white mb-6">📚 Bookmarked Books</h1>
         <div className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden">
-          {fetching ? <div className="p-10 text-center text-gray-400">Loading...</div> :
-            bookmarks.length === 0 ? <div className="p-10 text-center text-gray-400">No bookmarked books yet.</div> : (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gold/10">
-                    {["Title", "Author", "Price", "Date"].map(h => (
-                      <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>
-                    ))}
+          {fetching ? <div className="p-10 text-center text-gray-400">Loading...</div> : bookmarks.length === 0 ? (
+            <div className="p-10 text-center text-gray-400">No bookmarks yet.</div>
+          ) : (
+            <table className="w-full">
+              <thead><tr className="border-b border-gold/10">{["Title","Author","Price","Date"].map(h => <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>)}</tr></thead>
+              <tbody>
+                {bookmarks.map(b => (
+                  <tr key={b._id} className="border-b border-gold/5 hover:bg-white/2 cursor-pointer" onClick={() => router.push(`/ebooks/${b._id}`)}>
+                    <td className="px-6 py-4 text-white text-sm font-medium">{b.title}</td>
+                    <td className="px-6 py-4 text-gray-400 text-sm">{b.writerName}</td>
+                    <td className="px-6 py-4 text-gray-300 text-sm">${b.price}</td>
+                    <td className="px-6 py-4 text-gray-400 text-sm">{new Date(b.createdAt).toLocaleDateString()}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {bookmarks.map((b) => (
-                    <tr key={b._id} className="border-b border-gold/5 hover:bg-white/2 cursor-pointer"
-                      onClick={() => router.push(`/ebooks/${b._id}`)}>
-                      <td className="px-6 py-4 text-white text-sm font-medium">{b.title}</td>
-                      <td className="px-6 py-4 text-gray-400 text-sm">{b.writerName}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">${b.price}</td>
-                      <td className="px-6 py-4 text-gray-400 text-sm">{new Date(b.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </main>
     </div>
