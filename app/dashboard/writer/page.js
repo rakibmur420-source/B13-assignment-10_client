@@ -5,16 +5,17 @@ import { useAuth } from "@/context/AuthContext";
 import WriterSidebar from "@/components/WriterSidebar";
 import axios from "axios";
 
+const SAMPLE_ACTIVITY = [
+  "The Last Ember of Valtheria was purchased by a reader.",
+  "Echoes of Midnight received a new bookmark.",
+  "You published The Clockmaker's Promise.",
+  "A reader left a review on The Silent Garden.",
+];
+
 export default function WriterDashboard() {
   const { user, token, loading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState({ books: 0, sales: 0, bookmarks: 0, revenue: 0 });
-  const [activity] = useState([
-    "The Last Ember of Valtheria was purchased by a reader.",
-    "Echoes of Midnight received a new bookmark.",
-    "You published The Clockmaker's Promise.",
-    "A reader left a review on The Silent Garden.",
-  ]);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
@@ -30,13 +31,13 @@ export default function WriterDashboard() {
         axios.get(`${API_URL}/api/ebooks/writer/${user._id}`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/api/transactions/my-sales`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
-      const books = booksRes.data;
-      const sales = salesRes.data;
+      const books = booksRes.data || [];
+      const sales = salesRes.data || [];
       setStats({
         books: books.filter(b => b.status === "published").length,
         sales: sales.length,
         bookmarks: books.reduce((s, b) => s + (b.bookmarks || 0), 0),
-        revenue: sales.reduce((s, t) => s + t.amount, 0),
+        revenue: sales.reduce((s, t) => s + (t.amount || 0), 0),
       });
     } catch (e) {}
   };
@@ -71,8 +72,8 @@ export default function WriterDashboard() {
         {/* Recent Activity */}
         <div className="bg-navy-light border border-gold/10 rounded-2xl p-6 mb-6">
           <h2 className="text-white font-semibold mb-4">Recent Activity</h2>
-          <div className="space-y-3">
-            {activity.map((a, i) => (
+          <div className="space-y-0">
+            {SAMPLE_ACTIVITY.map((a, i) => (
               <div key={i} className="py-3 border-b border-gold/5 last:border-0">
                 <p className="text-gray-300 text-sm">{a}</p>
               </div>
@@ -82,7 +83,10 @@ export default function WriterDashboard() {
 
         {/* Quick Actions */}
         <div className="bg-navy-light border border-gold/10 rounded-2xl p-6">
-          <p className="text-gray-400 text-xs mb-4 text-right">This Month</p>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold">Quick Actions</h2>
+            <span className="text-gray-500 text-xs">This Month</span>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => router.push("/dashboard/writer/add")}
               className="py-3 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold rounded-xl text-sm font-medium transition-all">

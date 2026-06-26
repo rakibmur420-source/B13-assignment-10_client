@@ -6,7 +6,7 @@ import WriterSidebar from "@/components/WriterSidebar";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const GENRES = ["Fiction", "Mystery", "Romance", "Sci-Fi", "Fantasy", "Horror", "Thriller", "Adventure", "Biography", "Self-Help", "History", "Drama"];
+const GENRES = ["Fiction","Mystery","Romance","Sci-Fi","Fantasy","Horror","Thriller","Adventure","Biography","Self-Help","History","Drama"];
 
 export default function AddBookPage() {
   const { user, token } = useAuth();
@@ -43,7 +43,7 @@ export default function AddBookPage() {
       await axios.post(`${API_URL}/api/ebooks`, { ...form, price: Number(form.price), coverImage }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Book published successfully! 🎉");
+      toast.success("Book published! 🎉");
       router.push("/dashboard/writer/books");
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to publish");
@@ -56,29 +56,26 @@ export default function AddBookPage() {
       <main className="flex-1 pt-20 px-8 pb-10">
         <div className="mb-6">
           <h1 className="text-2xl font-serif font-bold text-white">Add a New Book</h1>
-          <p className="text-gray-400 text-sm mt-1">Fill in the details and publish your ebook to the platform.</p>
+          <p className="text-gray-400 text-sm mt-1">Fill in the details and publish your ebook.</p>
         </div>
-
         <div className="max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Cover Image */}
             <div className="bg-navy-light border border-gold/10 rounded-2xl p-5">
               <label className="text-gray-400 text-sm mb-3 block font-medium">Cover Image</label>
               <div className="flex items-start gap-5">
                 <div className="w-28 h-36 bg-navy rounded-xl border-2 border-dashed border-gold/20 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {preview ? <img src={preview} className="w-full h-full object-cover rounded-xl" /> : <span className="text-3xl">📖</span>}
+                  {preview ? <img src={preview} className="w-full h-full object-cover rounded-xl" alt="preview" /> : <span className="text-3xl">📖</span>}
                 </div>
                 <div>
                   <input type="file" accept="image/*" onChange={handleFile} className="hidden" id="cover-upload" />
-                  <label htmlFor="cover-upload" className="cursor-pointer px-4 py-2 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold rounded-xl text-sm font-medium transition-all inline-block">
+                  <label htmlFor="cover-upload" className="cursor-pointer px-4 py-2 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold rounded-xl text-sm font-medium inline-block">
                     Upload Cover
                   </label>
-                  <p className="text-gray-500 text-xs mt-2">JPG, PNG, WebP — Recommended 400×600px</p>
+                  <p className="text-gray-500 text-xs mt-2">JPG, PNG — Recommended 400×600px</p>
                 </div>
               </div>
             </div>
 
-            {/* Fields */}
             <div className="bg-navy-light border border-gold/10 rounded-2xl p-5 space-y-4">
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Title *</label>
@@ -89,7 +86,7 @@ export default function AddBookPage() {
                 <div>
                   <label className="text-gray-400 text-sm mb-2 block">Genre</label>
                   <select value={form.genre} onChange={e => setForm({...form, genre: e.target.value})}
-                    className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white focus:outline-none">
+                    className="w-full px-4 py-3 bg-navy border border-gold/20 rounded-xl text-white focus:outline-none">
                     {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
@@ -102,7 +99,7 @@ export default function AddBookPage() {
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Description</label>
                 <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
-                  placeholder="A short description of your book..." className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none" />
+                  placeholder="A short description..." className="w-full px-4 py-3 bg-navy border border-gold/20 focus:border-gold/50 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none" />
               </div>
               <div>
                 <label className="text-gray-400 text-sm mb-2 block">Content *</label>

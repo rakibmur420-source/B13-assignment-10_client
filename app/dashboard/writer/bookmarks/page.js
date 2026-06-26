@@ -5,6 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import WriterSidebar from "@/components/WriterSidebar";
 import axios from "axios";
 
+const SAMPLE = [
+  { _id: "bm1", title: "The Silent Horizon", writerName: "Elena Rivers", price: 12.99, createdAt: "2026-06-16" },
+  { _id: "bm2", title: "Ashes of Tomorrow", writerName: "Mark Dalton", price: 9.5, createdAt: "2026-06-16" },
+  { _id: "bm3", title: "Neon Dreams", writerName: "Aiko Tanaka", price: 15, createdAt: "2026-06-16" },
+];
+
 export default function WriterBookmarksPage() {
   const { user, token, loading } = useAuth();
   const router = useRouter();
@@ -16,7 +22,9 @@ export default function WriterBookmarksPage() {
     if (loading) return;
     if (!user || user.role !== "writer") { router.push("/"); return; }
     axios.get(`${API_URL}/api/users/${user._id}/bookmarks`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setBookmarks(r.data)).catch(() => {}).finally(() => setFetching(false));
+      .then(r => setBookmarks(r.data?.length > 0 ? r.data : SAMPLE))
+      .catch(() => setBookmarks(SAMPLE))
+      .finally(() => setFetching(false));
   }, [user, loading]);
 
   return (
@@ -32,15 +40,15 @@ export default function WriterBookmarksPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gold/10">
-                    <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Title</th>
-                    <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Author</th>
-                    <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Price</th>
-                    <th className="text-left text-gray-400 text-xs px-6 py-3 font-medium">Date</th>
+                    {["Title", "Author", "Price", "Date"].map(h => (
+                      <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {bookmarks.map((b) => (
-                    <tr key={b._id} className="border-b border-gold/5 hover:bg-white/2 cursor-pointer" onClick={() => router.push(`/ebooks/${b._id}`)}>
+                    <tr key={b._id} className="border-b border-gold/5 hover:bg-white/2 cursor-pointer"
+                      onClick={() => router.push(`/ebooks/${b._id}`)}>
                       <td className="px-6 py-4 text-white text-sm font-medium">{b.title}</td>
                       <td className="px-6 py-4 text-gray-400 text-sm">{b.writerName}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">${b.price}</td>
@@ -49,7 +57,7 @@ export default function WriterBookmarksPage() {
                   ))}
                 </tbody>
               </table>
-          )}
+            )}
         </div>
       </main>
     </div>

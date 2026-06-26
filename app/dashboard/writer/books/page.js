@@ -22,24 +22,26 @@ export default function WriterBooksPage() {
   const fetchBooks = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/ebooks/writer/${user._id}`, { headers: { Authorization: `Bearer ${token}` } });
-      setBooks(res.data);
+      setBooks(res.data || []);
     } catch (e) { toast.error("Failed to load books"); }
     finally { setFetching(false); }
   };
 
   const toggleStatus = async (id) => {
+    setBooks(prev => prev.map(b => b._id === id ? { ...b, status: b.status === "published" ? "unpublished" : "published" } : b));
     try {
       await axios.patch(`${API_URL}/api/ebooks/${id}/status`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success("Status updated!"); fetchBooks();
-    } catch (e) { toast.error("Failed"); }
+      toast.success("Status updated!");
+    } catch { fetchBooks(); toast.error("Failed"); }
   };
 
   const deleteBook = async (id) => {
     if (!confirm("Delete this book?")) return;
+    setBooks(prev => prev.filter(b => b._id !== id));
     try {
       await axios.delete(`${API_URL}/api/ebooks/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success("Deleted!"); fetchBooks();
-    } catch (e) { toast.error("Failed"); }
+      toast.success("Deleted!");
+    } catch { fetchBooks(); toast.error("Failed"); }
   };
 
   return (
@@ -76,11 +78,9 @@ export default function WriterBooksPage() {
             {books.map((b) => (
               <div key={b._id} className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden">
                 <div className="h-44 bg-navy flex items-center justify-center overflow-hidden">
-                  {b.coverImage ? (
-                    <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-5xl">📖</span>
-                  )}
+                  {b.coverImage
+                    ? <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" />
+                    : <span className="text-5xl">📖</span>}
                 </div>
                 <div className="p-4">
                   <h3 className="text-white font-semibold mb-1 truncate">{b.title}</h3>
@@ -88,15 +88,11 @@ export default function WriterBooksPage() {
                   <div className="flex items-center justify-between">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       b.status === "published" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-                    }`}>
-                      {b.status}
-                    </span>
+                    }`}>{b.status}</span>
                     <div className="flex gap-2">
                       <button onClick={() => toggleStatus(b._id)}
                         className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                          b.status === "published"
-                            ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                            : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                          b.status === "published" ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
                         }`}>
                         {b.status === "published" ? "Unpublish" : "Publish"}
                       </button>
