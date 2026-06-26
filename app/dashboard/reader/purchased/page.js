@@ -16,7 +16,9 @@ export default function PurchasedBooksPage() {
     if (loading) return;
     if (!user) { router.push("/login"); return; }
     axios.get(`${API_URL}/api/transactions/my-purchases`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setPurchases(r.data)).catch(() => {}).finally(() => setFetching(false));
+      .then(r => setPurchases(r.data || []))
+      .catch(() => {})
+      .finally(() => setFetching(false));
   }, [user, loading]);
 
   return (
@@ -28,25 +30,20 @@ export default function PurchasedBooksPage() {
           <p className="text-gray-400 text-sm mt-1">All ebooks you have bought.</p>
         </div>
         {fetching ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
-          </div>
+          <div className="flex items-center justify-center py-20"><div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" /></div>
         ) : purchases.length === 0 ? (
           <div className="bg-navy-light border border-gold/10 rounded-2xl p-16 text-center">
             <p className="text-4xl mb-4">📖</p>
             <p className="text-white font-semibold mb-2">No purchases yet</p>
-            <p className="text-gray-400 text-sm mb-6">Browse our collection and buy your first ebook!</p>
-            <button onClick={() => router.push("/ebooks")} className="px-6 py-2 bg-gold text-navy font-bold rounded-xl text-sm">Browse Books</button>
+            <button onClick={() => router.push("/ebooks")} className="px-6 py-2 bg-gold text-navy font-bold rounded-xl text-sm mt-4">Browse Books</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {purchases.map((t) => (
-              <div key={t._id} className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden cursor-pointer hover:border-gold/30 transition-all"
-                onClick={() => router.push(`/ebooks/${t.ebook?._id}`)}>
+              <div key={t._id} onClick={() => router.push(`/ebooks/${t.ebook?._id}`)}
+                className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden cursor-pointer hover:border-gold/30 transition-all">
                 <div className="h-44 bg-navy flex items-center justify-center overflow-hidden">
-                  {t.ebook?.coverImage
-                    ? <img src={t.ebook.coverImage} alt={t.ebookTitle} className="w-full h-full object-cover" />
-                    : <span className="text-5xl">📖</span>}
+                  {t.ebook?.coverImage ? <img src={t.ebook.coverImage} alt={t.ebookTitle} className="w-full h-full object-cover" /> : <span className="text-5xl">📖</span>}
                 </div>
                 <div className="p-4">
                   <h3 className="text-white font-semibold mb-1">{t.ebookTitle}</h3>
