@@ -4,7 +4,6 @@
 A modern full-stack ebook sharing platform where readers can discover and purchase ebooks, writers can publish and manage their work, and admins oversee the entire ecosystem.
 
 ## 🌐 Live URL
-
 b13-assignment-10-client.vercel.app
 
 ## server repo link
