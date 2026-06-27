@@ -5,11 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import WriterSidebar from "@/components/WriterSidebar";
 import axios from "axios";
 
-const SAMPLE_SALES = [
-  { _id: "s1", ebookTitle: "UwU UwU UwU", buyerEmail: "wemmbu@gmail.com", amount: 890, createdAt: "2026-06-16" },
-  { _id: "s2", ebookTitle: "UwU UwU UwU", buyerEmail: "wemmbu@gmail.com", amount: 890, createdAt: "2026-06-16" },
-];
-
 export default function WriterSalesPage() {
   const { user, token, loading } = useAuth();
   const router = useRouter();
@@ -21,8 +16,8 @@ export default function WriterSalesPage() {
     if (loading) return;
     if (!user || user.role !== "writer") { router.push("/"); return; }
     axios.get(`${API_URL}/api/transactions/my-sales`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => { if (r.data?.length > 0) setSales(r.data); else setSales(SAMPLE_SALES); })
-      .catch(() => setSales(SAMPLE_SALES))
+      .then(r => setSales(r.data || []))
+      .catch(() => setSales([]))
       .finally(() => setFetching(false));
   }, [user, loading]);
 
@@ -55,7 +50,10 @@ export default function WriterSalesPage() {
           {fetching ? (
             <div className="p-10 text-center text-gray-400">Loading...</div>
           ) : sales.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">No sales yet. Keep publishing! 📚</div>
+            <div className="p-10 text-center">
+              <p className="text-3xl mb-3">📊</p>
+              <p className="text-gray-400">No sales yet. Keep publishing!</p>
+            </div>
           ) : (
             <table className="w-full">
               <thead>
