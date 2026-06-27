@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { FiGrid, FiBook, FiBookmark, FiUser, FiMenu, FiX } from "react-icons/fi";
 
 const links = [
-  { href: "/dashboard/reader", label: "Dashboard", icon: <FiGrid /> },
+  { href: "/dashboard/reader", label: "Home", icon: <FiGrid /> },
   { href: "/dashboard/reader/purchased", label: "Purchased Books", icon: <FiBook /> },
   { href: "/dashboard/reader/bookmarks", label: "Bookmarks", icon: <FiBookmark /> },
   { href: "/dashboard/reader/profile", label: "Profile", icon: <FiUser /> },
