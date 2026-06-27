@@ -4,35 +4,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { FiSearch } from "react-icons/fi";
 
-const SEED_BOOKS = [
-  { _id: "seed1", title: "The Last Ember of Valtheria", writerName: "Evelyn Hart", genre: "Fantasy", price: 12.99, coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead.", totalSales: 190, status: "published" },
-  { _id: "seed2", title: "Whispers in Ash", writerName: "Noah Blake", genre: "Mystery", price: 9.99, coverImage: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop", description: "A detective hunts a killer through the fog of a dying city.", totalSales: 214, status: "published" },
-  { _id: "seed3", title: "Orbit of Dreams", writerName: "Lena Carter", genre: "Sci-Fi", price: 11.50, coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop", description: "Two astronauts fall in love on a mission to the edge of the solar system.", totalSales: 145, status: "published" },
-  { _id: "seed4", title: "Moonlit Letters", writerName: "Emma Rivers", genre: "Romance", price: 9.99, coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&h=600&fit=crop", description: "Two strangers exchange anonymous letters that slowly transform their lives.", totalSales: 312, status: "published" },
-  { _id: "seed5", title: "The Garden of Forgotten Stars", writerName: "Lillian Moore", genre: "Mystery", price: 10.99, coverImage: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop", description: "A botanist discovers flowers that preserve memories of the dead.", totalSales: 190, status: "published" },
-  { _id: "seed6", title: "Echoes of Tomorrow", writerName: "James Holt", genre: "Sci-Fi", price: 13.50, coverImage: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&h=600&fit=crop", description: "A scientist travels back in time only to find the future has already changed.", totalSales: 98, status: "published" },
-  { _id: "seed7", title: "The Clockmaker's Promise", writerName: "Sophia Reed", genre: "Fiction", price: 8.99, coverImage: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop", description: "A clockmaker discovers his creations hold the power to stop time.", totalSales: 76, status: "published" },
-  { _id: "seed8", title: "Midnight Library", writerName: "Oliver Stone", genre: "Fantasy", price: 14.99, coverImage: "https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400&h=600&fit=crop", description: "Between life and death there is a library, and each book is a different life you could have lived.", totalSales: 421, status: "published" },
-];
-
 const GENRES = ["All", "Fiction", "Mystery", "Romance", "Sci-Fi", "Fantasy", "Horror", "Thriller", "Adventure", "Biography", "Self-Help", "History", "Drama"];
 
 function EbooksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [books, setBooks] = useState(SEED_BOOKS);
+  const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState(searchParams.get("genre") || "All");
   const [loading, setLoading] = useState(true);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (genre && genre !== "All") params.set("genre", genre);
     axios.get(`${API_URL}/api/ebooks?${params.toString()}`)
-      .then(r => { if (r.data?.ebooks?.length > 0) setBooks(r.data.ebooks); })
-      .catch(() => {})
+      .then(r => { setBooks(r.data?.ebooks || []); })
+      .catch(() => setBooks([]))
       .finally(() => setLoading(false));
   }, [search, genre]);
 
@@ -68,8 +58,17 @@ function EbooksContent() {
 
         {/* Books Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-52 bg-navy" />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 bg-gold/10 rounded w-1/3" />
+                  <div className="h-4 bg-gold/10 rounded w-4/5" />
+                  <div className="h-3 bg-gold/10 rounded w-2/4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
@@ -99,9 +98,6 @@ function EbooksContent() {
                     <span className="text-gold font-bold text-sm">${book.price}</span>
                     {book.totalSales > 0 && <span className="text-gray-500 text-xs">Sales: {book.totalSales}</span>}
                   </div>
-                  {book.status === "published" && (
-                    <span className="mt-2 inline-block px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">published</span>
-                  )}
                 </div>
               </div>
             ))}

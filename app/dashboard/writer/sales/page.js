@@ -27,13 +27,13 @@ export default function WriterSalesPage() {
   return (
     <div className="flex bg-navy min-h-screen">
       <WriterSidebar />
-      <main className="flex-1 pt-20 px-8 pb-10">
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-10">
         <div className="mb-6">
           <h1 className="text-2xl font-serif font-bold text-white flex items-center gap-2">Sales History 💰</h1>
           <p className="text-gray-400 text-sm mt-1">Track all purchases made on your stories.</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
             { label: "Total Sales", value: sales.length, color: "text-white" },
             { label: "Revenue", value: `$${totalRevenue.toLocaleString()}`, color: "text-green-400" },
@@ -55,27 +55,29 @@ export default function WriterSalesPage() {
               <p className="text-gray-400">No sales yet. Keep publishing!</p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gold/10">
-                  {["Book", "Buyer Email", "Amount", "Date"].map(h => (
-                    <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((t) => (
-                  <tr key={t._id} className="border-b border-gold/5 hover:bg-white/2">
-                    <td className="px-6 py-4 text-white text-sm font-medium">{t.ebookTitle}</td>
-                    <td className="px-6 py-4 text-gray-400 text-sm">{t.buyerEmail}</td>
-                    <td className="px-6 py-4 text-green-400 text-sm font-bold">${t.amount}</td>
-                    <td className="px-6 py-4 text-gray-400 text-sm">
-                      {new Date(t.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gold/10">
+                    {["Book", "Buyer Email", "Amount", "Date"].map(h => (
+                      <th key={h} className="text-left text-gray-400 text-xs px-6 py-4 font-medium">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sales.map((t) => (
+                    <tr key={t._id} className="border-b border-gold/5 hover:bg-white/2">
+                      <td className="px-6 py-4 text-white text-sm font-medium">{t.ebookTitle}</td>
+                      <td className="px-6 py-4 text-gray-400 text-sm">{t.buyerEmail}</td>
+                      <td className="px-6 py-4 text-green-400 text-sm font-bold">${t.amount}</td>
+                      <td className="px-6 py-4 text-gray-400 text-sm">
+                        {new Date(t.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </main>

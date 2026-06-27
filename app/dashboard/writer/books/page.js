@@ -48,7 +48,7 @@ export default function WriterBooksPage() {
   return (
     <div className="flex bg-navy min-h-screen">
       <WriterSidebar />
-      <main className="flex-1 pt-20 px-8 pb-10">
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-10">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-serif font-bold text-white">My Books</h1>

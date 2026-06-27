@@ -8,27 +8,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 
-const FALLBACK_STATS = {
-  totalUsers: 12458,
-  totalWriters: 1286,
-  totalEbooks: 28742,
-  totalRevenue: 186530,
-  monthlySales: [
-    { _id: { month: 1 }, revenue: 12000, sales: 45 },
-    { _id: { month: 2 }, revenue: 15000, sales: 60 },
-    { _id: { month: 3 }, revenue: 16000, sales: 72 },
-    { _id: { month: 4 }, revenue: 17000, sales: 80 },
-    { _id: { month: 5 }, revenue: 21000, sales: 95 },
-    { _id: { month: 6 }, revenue: 25000, sales: 110 },
-  ],
-};
-
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 export default function AdminDashboard() {
   const { user, token, loading } = useAuth();
   const router = useRouter();
-  const [analytics, setAnalytics] = useState(FALLBACK_STATS);
+  const [analytics, setAnalytics] = useState(null);
   const [fetching, setFetching] = useState(true);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -44,27 +29,26 @@ export default function AdminDashboard() {
       const res = await axios.get(`${API_URL}/api/transactions/analytics`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data) setAnalytics({ ...FALLBACK_STATS, ...res.data });
+      if (res.data) setAnalytics(res.data);
     } catch (e) {
-      // use fallback
+      setAnalytics(null);
     } finally {
       setFetching(false);
     }
   };
 
-  const chartData = (analytics.monthlySales || []).map(m => ({
+  const chartData = (analytics?.monthlySales || []).map(m => ({
     name: MONTHS[(m._id?.month || 1) - 1],
     revenue: m.revenue || 0,
     sales: m.sales || 0,
-    label: `$${((m.revenue || 0) / 1000).toFixed(0)}k`,
   }));
 
-  const stats = [
-    { label: "Total Users", value: analytics.totalUsers?.toLocaleString(), icon: "👥", color: "text-blue-400", bg: "bg-blue-500/10" },
-    { label: "Total Writers", value: analytics.totalWriters?.toLocaleString(), icon: "✍️", color: "text-purple-400", bg: "bg-purple-500/10" },
-    { label: "Ebooks Sold", value: analytics.totalEbooks?.toLocaleString(), icon: "📚", color: "text-gold", bg: "bg-gold/10" },
+  const stats = analytics ? [
+    { label: "Total Users", value: analytics.totalUsers?.toLocaleString() || "0", icon: "👥", color: "text-blue-400", bg: "bg-blue-500/10" },
+    { label: "Total Writers", value: analytics.totalWriters?.toLocaleString() || "0", icon: "✍️", color: "text-purple-400", bg: "bg-purple-500/10" },
+    { label: "Ebooks Published", value: analytics.totalEbooks?.toLocaleString() || "0", icon: "📚", color: "text-gold", bg: "bg-gold/10" },
     { label: "Total Revenue", value: `$${(analytics.totalRevenue || 0).toLocaleString()}`, icon: "💰", color: "text-green-400", bg: "bg-green-500/10" },
-  ];
+  ] : [];
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -82,7 +66,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex bg-navy min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 pt-20 px-8 pb-10">
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-10">
         <div className="mb-8">
           <h1 className="text-2xl font-serif font-bold text-white flex items-center gap-2">
             Admin Dashboard <span>📊</span>
@@ -90,51 +74,67 @@ export default function AdminDashboard() {
           <p className="text-gray-400 text-sm mt-1">Monitor the platform's growth, sales, and reader activity.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stats.map((s) => (
-            <div key={s.label} className={`${s.bg} border border-gold/10 rounded-2xl p-5`}>
-              <div className="text-2xl mb-3">{s.icon}</div>
-              <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-gray-400 text-sm mt-1">{s.label}</div>
+        {fetching ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-navy-light border border-gold/10 rounded-2xl p-5 animate-pulse">
+                <div className="text-2xl mb-3">⬜</div>
+                <div className="h-6 bg-gold/10 rounded w-2/3 mb-2" />
+                <div className="h-3 bg-gold/10 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : !analytics ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-4">📊</p>
+            <p className="text-gray-400">No analytics data yet. Start getting users and sales!</p>
+          </div>
+        ) : (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {stats.map((s) => (
+                <div key={s.label} className={`${s.bg} border border-gold/10 rounded-2xl p-5`}>
+                  <div className="text-2xl mb-3">{s.icon}</div>
+                  <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                  <div className="text-gray-400 text-sm mt-1">{s.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Bar Chart */}
-        <div className="bg-navy-light border border-gold/10 rounded-2xl p-6 mb-6">
-          <h2 className="text-white font-serif font-bold text-lg mb-6">Monthly Sales Trend</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: "#9CA3AF", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis
-                tick={{ fill: "#9CA3AF", fontSize: 11 }}
-                axisLine={false} tickLine={false}
-                tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(245,166,35,0.05)" }} />
-              <Bar dataKey="revenue" fill="#F5A623" radius={[6, 6, 0, 0]} maxBarSize={60}
-                label={{ position: "top", fill: "#9CA3AF", fontSize: 10, formatter: (v) => `$${(v/1000).toFixed(0)}k` }}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            {/* Bar Chart */}
+            {chartData.length > 0 && (
+              <div className="bg-navy-light border border-gold/10 rounded-2xl p-6 mb-6">
+                <h2 className="text-white font-serif font-bold text-lg mb-6">Monthly Sales Trend</h2>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: "#9CA3AF", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis
+                      tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                      axisLine={false} tickLine={false}
+                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(245,166,35,0.05)" }} />
+                    <Bar dataKey="revenue" fill="#F5A623" radius={[6, 6, 0, 0]} maxBarSize={60} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
 
-        {/* Genre breakdown placeholder */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "New Users This Month", value: "1,240", change: "+12%", color: "text-green-400" },
-            { label: "Books Published", value: "348", change: "+8%", color: "text-green-400" },
-            { label: "Avg Sale Value", value: "$12.40", change: "+3%", color: "text-green-400" },
-          ].map(s => (
-            <div key={s.label} className="bg-navy-light border border-gold/10 rounded-2xl p-5">
-              <p className="text-gray-400 text-sm">{s.label}</p>
-              <p className="text-white text-xl font-bold mt-1">{s.value}</p>
-              <p className={`text-xs mt-1 ${s.color}`}>{s.change} from last month</p>
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-navy-light border border-gold/10 rounded-2xl p-5">
+                <p className="text-gray-400 text-sm">Total Readers</p>
+                <p className="text-white text-xl font-bold mt-1">{analytics.totalReaders?.toLocaleString() || "0"}</p>
+              </div>
+              <div className="bg-navy-light border border-gold/10 rounded-2xl p-5">
+                <p className="text-gray-400 text-sm">Total Transactions</p>
+                <p className="text-white text-xl font-bold mt-1">{(analytics.monthlySales || []).reduce((s, m) => s + (m.sales || 0), 0).toLocaleString()}</p>
+              </div>
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </main>
     </div>
   );
