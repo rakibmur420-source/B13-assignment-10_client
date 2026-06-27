@@ -1,13 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiUsers, FiBook, FiDollarSign } from "react-icons/fi";
+import { FiGrid, FiUsers, FiBook, FiDollarSign, FiUser } from "react-icons/fi";
 
 const links = [
   { href: "/dashboard/admin", label: "Dashboard", icon: <FiGrid /> },
   { href: "/dashboard/admin/users", label: "Users", icon: <FiUsers /> },
   { href: "/dashboard/admin/books", label: "Books", icon: <FiBook /> },
   { href: "/dashboard/admin/payments", label: "Payments", icon: <FiDollarSign /> },
+  { href: "/dashboard/admin/profile", label: "Profile", icon: <FiUser /> },
 ];
 
 export default function AdminSidebar() {
