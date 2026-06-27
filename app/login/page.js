@@ -47,7 +47,15 @@ export default function LoginPage() {
       toast.success(`Welcome, ${user.name}!`);
       redirectByRole(user.role);
     } catch (err) {
-      toast.error("Google login failed. Please try again.");
+      console.error("Google login error:", err?.code, err?.message, err);
+      const msg = err?.code === "auth/popup-blocked"
+        ? "Popup blocked! Please allow popups for this site."
+        : err?.code === "auth/unauthorized-domain"
+        ? "Domain not authorized. Check Firebase settings."
+        : err?.code === "auth/popup-closed-by-user"
+        ? "Popup closed. Please try again."
+        : err?.response?.data?.message || "Google login failed. Please try again.";
+      toast.error(msg);
     } finally { setGoogleLoading(false); }
   };
 
