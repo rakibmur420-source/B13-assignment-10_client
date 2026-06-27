@@ -67,12 +67,12 @@ export default function WriterBooksPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {books.map((b) => (
-              <div key={b._id} className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden">
-                <div className="h-44 bg-navy flex items-center justify-center overflow-hidden">
+              <div key={b._id} className="bg-navy-light border border-gold/10 rounded-2xl overflow-hidden hover:border-gold/30 transition-all">
+                <div className="h-44 bg-navy flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => router.push(`/ebooks/${b._id}`)}>
                   {b.coverImage ? <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" /> : <span className="text-5xl">📖</span>}
                 </div>
                 <div className="p-4">
-                  <h3 className="text-white font-semibold mb-1 truncate">{b.title}</h3>
+                  <h3 className="text-white font-semibold mb-1 truncate cursor-pointer hover:text-gold" onClick={() => router.push(`/ebooks/${b._id}`)}>{b.title}</h3>
                   <p className="text-gray-400 text-xs mb-3">{b.genre} · ${b.price}</p>
                   <div className="flex items-center justify-between">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${b.status === "published" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>{b.status}</span>
