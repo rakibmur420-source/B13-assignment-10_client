@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# 📚 Fable – Ebook Sharing Platform (Client)
 
-First, run the development server:
+A modern full-stack ebook sharing platform where readers can discover and purchase ebooks, writers can publish and manage their work, and admins oversee the entire ecosystem.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🌐 Live URL
+
+b13-assignment-10-client.vercel.app
+
+## server repo link
+https://github.com/rakibmur420-source/B13-assignment-10_server
+
+
+## 👤 Admin Credentials
+
+- **Email:** admin@fable.com
+- **Password:** Admin@123
+
+##  Key Features
+
+-  Email/password and Google OAuth login (Firebase)
+-  Three-role system: Reader, Writer, Admin
+-  Browse, search, and filter ebooks by genre, price, availability
+-  Stripe payment integration for ebook purchases
+-  Bookmark ebooks for later
+-  Role-specific dashboards with analytics
+-  Dark mode support
+-  Fully responsive design (mobile, tablet, desktop)
+-  ImgBB API for cover image uploads
+-  Framer Motion animations
+
+##  Pages
+
+| Page | Route |
+|---|---|
+| Home | `/` |
+| Browse Ebooks | `/ebooks` |
+| Ebook Details | `/ebooks/[id]` |
+| Login | `/login` |
+| Register | `/register` |
+| Reader Dashboard | `/dashboard/reader` |
+| Writer Dashboard | `/dashboard/writer` |
+| Admin Dashboard | `/dashboard/admin` |
+| Payment Success | `/payment/success` |
+
+##  NPM Packages Used
+
+| Package | Purpose |
+|---|---|
+| `next` | React framework (v14) |
+| `react` | UI library |
+| `axios` | HTTP requests |
+| `firebase` | Google OAuth authentication |
+| `react-hot-toast` | Toast notifications |
+| `react-icons` | Icon library |
+| `recharts` | Charts and analytics graphs |
+| `framer-motion` | Animations |
+| `next-themes` | Dark/light mode toggle |
+| `tailwindcss` | Utility-first CSS framework |
+
+##  Environment Variables
+
+Create a `.env.local` file in the root:
+
+```env
+NEXT_PUBLIC_API_URL=your_server_url
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_api_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+##  Getting Started
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+# Run development server
+npm run dev
 
-## Learn More
+# Build for production
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
