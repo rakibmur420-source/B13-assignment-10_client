@@ -32,7 +32,7 @@ export default function ReaderDashboard() {
     const userId = user.id || user._id;
     setPurchases(prev => prev.filter(t => t.ebook?._id !== ebookId));
     try {
-      await axios.delete(`${API_URL}/api/users/${userId}/purchased/${ebookId}`, {
+      await axios.delete(`${API_URL}/api/transactions/my-purchases/${ebookId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success("Removed from purchases");
