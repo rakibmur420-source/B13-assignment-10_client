@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,6 +18,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <Navbar />
             {children}
+            <Footer />
             <Toaster position="top-right" />
           </AuthProvider>
         </ThemeProvider>
@@ -24,7 +26,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
-
-
-

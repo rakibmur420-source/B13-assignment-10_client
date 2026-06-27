@@ -40,7 +40,7 @@ export default function AddBookPage() {
     try {
       let coverImage = "";
       if (coverFile) coverImage = await uploadImage(coverFile);
-      await axios.post(`${API_URL}/api/ebooks`, { ...form, price: Number(form.price), coverImage }, {
+      await axios.post(`${API_URL}/api/ebooks`, { ...form, price: Number(form.price), coverImage, status: "published" }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Book published! 🎉");
@@ -53,7 +53,7 @@ export default function AddBookPage() {
   return (
     <div className="flex bg-navy min-h-screen">
       <WriterSidebar />
-      <main className="flex-1 pt-20 px-8 pb-10">
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-10">
         <div className="mb-6">
           <h1 className="text-2xl font-serif font-bold text-white">Add a New Book</h1>
           <p className="text-gray-400 text-sm mt-1">Fill in the details and publish your ebook.</p>
